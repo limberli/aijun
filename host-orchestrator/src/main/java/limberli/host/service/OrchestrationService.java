@@ -38,17 +38,28 @@ public class OrchestrationService {
     /**
      * @param qaMetadata A2A metadata map (e.g. {@code {"qa": {...}}}) forwarded to the tester agent
      *                   so the UI's preliminary settings drive test-case generation. May be null.
-     *                   The analyst agent is intentionally left untouched.
+     *                   Risk analysis (analyst agent) runs only when {@code metadata.riskAnalysis}
+     *                   is truthy — disabled by default.
      */
     public AnalysisResponse analyze(String documentText, Map<String, Object> qaMetadata) {
-        log.info("Orchestration started: docLength={}", documentText.length());
+        return analyze(documentText, qaMetadata, riskAnalysisEnabled(qaMetadata));
+    }
+
+    /**
+     * @param includeRiskAnalysis when {@code false}, the analyst agent is skipped entirely and
+     *                            {@code analystResponse} is {@code null}. Disabled by default.
+     */
+    public AnalysisResponse analyze(String documentText, Map<String, Object> qaMetadata, boolean includeRiskAnalysis) {
+        log.info("Orchestration started: docLength={} riskAnalysis={}", documentText.length(), includeRiskAnalysis);
         long start = System.currentTimeMillis();
 
         String testerUrl = agentProperties.tester().url();
         String analystUrl = agentProperties.analyst().url();
 
         CompletableFuture<String> testerFuture = agentClient.sendTask(testerUrl, documentText, qaMetadata);
-        CompletableFuture<String> analystFuture = agentClient.sendTask(analystUrl, documentText, null);
+        CompletableFuture<String> analystFuture = includeRiskAnalysis
+                ? agentClient.sendTask(analystUrl, documentText, null)
+                : CompletableFuture.completedFuture(null);
 
         try {
             CompletableFuture.allOf(testerFuture, analystFuture).join();
@@ -73,5 +84,17 @@ public class OrchestrationService {
                 saved.getId(), System.currentTimeMillis() - start);
 
         return new AnalysisResponse(saved.getId(), testerResponse, analystResponse, saved.getCreatedAt());
+    }
+
+    /** Reads the opt-in {@code metadata.riskAnalysis} flag (Boolean or "true"/"false" String). Default false. */
+    private boolean riskAnalysisEnabled(Map<String, Object> metadata) {
+        if (metadata == null) {
+            return false;
+        }
+        Object flag = metadata.get("riskAnalysis");
+        if (flag instanceof Boolean b) {
+            return b;
+        }
+        return flag != null && Boolean.parseBoolean(flag.toString());
     }
 }

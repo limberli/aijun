@@ -74,8 +74,9 @@ class AnalysisFlowIntegrationTest {
     }
 
     @Test
-    void givenValidDocument_whenAnalyze_thenReturnsAggregatedResponse() {
-        AnalysisRequest request = new AnalysisRequest("As a user I want to log in with email and password.");
+    void givenRiskAnalysisEnabled_whenAnalyze_thenReturnsAggregatedResponse() {
+        AnalysisRequest request = new AnalysisRequest(
+                "As a user I want to log in with email and password.", true);
 
         ResponseEntity<AnalysisResponse> response = restTemplate.postForEntity(
                 "/api/analyze", request, AnalysisResponse.class);
@@ -87,6 +88,21 @@ class AnalysisFlowIntegrationTest {
         assertThat(body.testerResponse()).contains("TC-001");
         assertThat(body.analystResponse()).contains("RISK");
         assertThat(body.analyzedAt()).isNotNull();
+    }
+
+    @Test
+    void givenRiskAnalysisDisabledByDefault_whenAnalyze_thenAnalystSkipped() {
+        AnalysisRequest request = new AnalysisRequest(
+                "As a user I want to log in with email and password.");
+
+        ResponseEntity<AnalysisResponse> response = restTemplate.postForEntity(
+                "/api/analyze", request, AnalysisResponse.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        AnalysisResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.testerResponse()).contains("TC-001");
+        assertThat(body.analystResponse()).isNull();
     }
 
     @Test

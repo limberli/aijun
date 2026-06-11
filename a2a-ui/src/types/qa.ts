@@ -30,7 +30,9 @@ export interface QaSettings {
   selections: QaSelections;
 }
 
-// Shape placed into the A2A message metadata: { qa: QaSettings }.
+// Shape placed into the A2A message metadata: { qa: QaSettings, riskAnalysis }.
+// riskAnalysis is opt-in (off by default); when true the orchestrator also runs the analyst agent.
 export interface QaMetadata {
   qa: QaSettings;
+  riskAnalysis: boolean;
 }
