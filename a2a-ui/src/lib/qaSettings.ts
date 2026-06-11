@@ -29,7 +29,12 @@ export const toggleSelection = (
   return { ...selections, [controlId]: next };
 };
 
-/** Wraps the chosen settings into the A2A message metadata shape: { qa: { mode, selections } }. */
-export const buildQaMetadata = (modeId: string, selections: QaSelections): QaMetadata => ({
+/** Wraps the chosen settings into the A2A message metadata shape: { qa: { mode, selections }, riskAnalysis }. */
+export const buildQaMetadata = (
+  modeId: string,
+  selections: QaSelections,
+  riskAnalysis: boolean = false
+): QaMetadata => ({
   qa: { mode: modeId, selections },
+  riskAnalysis,
 });

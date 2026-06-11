@@ -87,8 +87,10 @@ public class A2AController {
 
         AnalysisResponse analysis = orchestrationService.analyze(documentText, request.params().metadata());
 
-        String aggregatedText = "## Test Cases\n\n" + analysis.testerResponse() +
-                "\n\n---\n\n## Risk Analysis\n\n" + analysis.analystResponse();
+        String aggregatedText = "## Test Cases\n\n" + analysis.testerResponse()
+                + (analysis.analystResponse() != null
+                        ? "\n\n---\n\n## Risk Analysis\n\n" + analysis.analystResponse()
+                        : "");
 
         A2ATask task = new A2ATask(
                 analysis.conversationId().toString(),
@@ -118,8 +120,10 @@ public class A2AController {
 
         AnalysisResponse analysis = orchestrationService.analyze(documentText);
 
-        String aggregatedText = "## Test Cases\n\n" + analysis.testerResponse() +
-                "\n\n---\n\n## Risk Analysis\n\n" + analysis.analystResponse();
+        String aggregatedText = "## Test Cases\n\n" + analysis.testerResponse()
+                + (analysis.analystResponse() != null
+                        ? "\n\n---\n\n## Risk Analysis\n\n" + analysis.analystResponse()
+                        : "");
 
         A2ATaskResult result = new A2ATaskResult(
                 request.params().id(),

@@ -9,6 +9,12 @@ spring:
   jpa:
     open-in-view: false
 
+  # Uploaded .docx requirement documents (Loader/Parser endpoint)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   ai:
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}

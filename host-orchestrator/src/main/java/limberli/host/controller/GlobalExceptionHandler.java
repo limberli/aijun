@@ -2,6 +2,7 @@ package limberli.host.controller;
 
 import limberli.common.dto.ErrorResponse;
 import limberli.common.exception.AgentUnavailableException;
+import limberli.common.exception.DocumentParseException;
 import limberli.common.exception.LLMTimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,13 @@ public class GlobalExceptionHandler {
         log.warn("LLM timeout: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
                 .body(new ErrorResponse("LLM_TIMEOUT", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DocumentParseException.class)
+    public ResponseEntity<ErrorResponse> handleDocumentParse(DocumentParseException ex) {
+        log.warn("Document parse failed: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("DOCUMENT_PARSE_ERROR", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -44,7 +44,7 @@ class QaPromptBuilderTest {
         assertThat(prompt).contains("API-аспекты");               // selected case type
         assertThat(prompt).contains("граничных значений");        // selected technique
         assertThat(prompt).contains("3–5");                       // selected step detail
-        assertThat(prompt).contains("| ID | Описание проверки | Шаг | Ожидаемый результат |"); // output format
+        assertThat(prompt).contains("| ID | Техника-тест дизайна | Описание проверки | Шаг | Ожидаемый результат |"); // output format
         assertThat(prompt).doesNotContain("Pairwise");            // unselected technique absent
         assertThat(prompt).doesNotContain("UI-аспекты");          // unselected case type absent
     }
@@ -64,6 +64,6 @@ class QaPromptBuilderTest {
         String prompt = builder().build(null);
 
         assertThat(prompt).contains("Senior QA");
-        assertThat(prompt).contains("| ID | Описание проверки | Шаг | Ожидаемый результат |");
+        assertThat(prompt).contains("| ID | Техника-тест дизайна | Описание проверки | Шаг | Ожидаемый результат |");
     }
 }

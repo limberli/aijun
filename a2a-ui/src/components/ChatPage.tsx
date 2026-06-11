@@ -98,6 +98,7 @@ export const ChatPage: React.FC = () => {
               modes={modes.modes}
               loading={modes.loading}
               canSubmit={!!chat.agents.activeAgent}
+              agentBaseUrl={chat.agents.activeAgent?.url}
               onSubmit={handleSettingsSubmit}
             />
           ) : (

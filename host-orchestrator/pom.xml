@@ -43,6 +43,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Apache POI — parse uploaded .docx requirement documents into clean text -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+
         <!-- Actuator — /health /info /metrics /prometheus -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

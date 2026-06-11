@@ -31,6 +31,13 @@ docker compose up --build
 # Run with lighter phi3:mini model (faster startup, no healthchecks)
 docker compose -f docker-compose-simple.yml up --build
 
+# Local GPU stack (Ollama + Qwen2.5, NVIDIA). See docs/LOCAL_GPU.md for setup & troubleshooting.
+docker compose -f docker-compose-qwen.yml up --build          # default qwen2.5:14b
+OLLAMA_MODEL=qwen2.5:32b docker compose -f docker-compose-qwen.yml up --build
+
+# Cloud stack (Groq, no GPU needed) — logs to ./logs/cloud
+docker compose -f docker-compose-groq.yml up --build
+
 # a2a-ui development (from a2a-ui/)
 npm run dev      # dev server
 npm run build    # production build
