@@ -30,6 +30,8 @@ public class QaCatalogProperties {
         private String label;
         private String base;
         private String output;
+        /** System prompt for the planner pass (feature/branch extraction). May be null. */
+        private String planner;
         private List<Control> controls = List.of();
 
         public Control control(String id) {
