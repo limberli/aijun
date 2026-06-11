@@ -1,0 +1,155 @@
+version: '3.8'
+
+# Local mode — Ollama + Qwen2.5, no cloud API needed.
+#
+# Recommended for a machine with an NVIDIA GPU (e.g. RTX 4090, 24 GB VRAM).
+# Default model qwen2.5:14b fits comfortably; override for a stronger/weaker one:
+#   OLLAMA_MODEL=qwen2.5:32b docker compose -f docker-compose-qwen.yml up --build
+#   OLLAMA_MODEL=qwen2.5:7b  docker compose -f docker-compose-qwen.yml up --build
+#
+# GPU acceleration requires the NVIDIA Container Toolkit on the host:
+#   https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+# Without a GPU, remove the `deploy:` block from the `ollama` service to run on CPU (slow).
+#
+# Logs of every run are written to ./logs/local/*.log for later analysis.
+
+services:
+
+  # ── 1. Ollama LLM runtime (GPU) ─────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── 2. Model pull (one-shot init container) ─────────────────────────────
+  # Pulls the configured Qwen2.5 model before any agent starts.
+  ollama-model-init:
+    image: curlimages/curl:latest
+    container_name: ollama-model-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "curl -sf -X POST http://ollama:11434/api/pull
+        -d '{\"name\":\"${OLLAMA_MODEL:-qwen2.5:14b}\",\"stream\":false}'
+        --max-time 1800"
+    restart: "no"
+
+  # ── 3. Tester Agent ─────────────────────────────────────────────────────
+  tester-agent:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: tester-agent/Dockerfile
+    container_name: tester-agent
+    ports:
+      - "8081:8081"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
+      SPRING_PROFILES_ACTIVE: prod
+      LOG_DIR: /app/logs
+    volumes:
+      - ./logs/local:/app/logs
+    depends_on:
+      ollama-model-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── 4. Analyst Agent ─────────────────────────────────────────────────────
+  analyst-agent:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: analyst-agent/Dockerfile
+    container_name: analyst-agent
+    ports:
+      - "8082:8082"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
+      SPRING_PROFILES_ACTIVE: prod
+      LOG_DIR: /app/logs
+    volumes:
+      - ./logs/local:/app/logs
+    depends_on:
+      ollama-model-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8082/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── 5. Host Orchestrator ─────────────────────────────────────────────────
+  host-orchestrator:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: host-orchestrator/Dockerfile
+    container_name: host-orchestrator
+    ports:
+      - "8080:8080"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      AGENTS_TESTER_URL: http://tester-agent:8081
+      AGENTS_ANALYST_URL: http://analyst-agent:8082
+      AGENT_PUBLIC_URL: http://host-orchestrator:8080
+      SPRING_PROFILES_ACTIVE: prod
+      LOG_DIR: /app/logs
+    volumes:
+      - orchestrator_data:/app/data
+      - ./logs/local:/app/logs
+    depends_on:
+      tester-agent:
+        condition: service_healthy
+      analyst-agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── 6. a2a-ui (web interface) ────────────────────────────────────────────
+  a2a-ui:
+    image: node:22-alpine
+    container_name: a2a-ui
+    working_dir: /app
+    volumes:
+      - ./a2a-ui:/app
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run build && npm start"
+    environment:
+      NEXT_PUBLIC_DEFAULT_AGENT_CARDS_URL: http://host-orchestrator:8080/agent-cards.json
+    depends_on:
+      host-orchestrator:
+        condition: service_healthy
+
+volumes:
+  ollama_data:
+  orchestrator_data:

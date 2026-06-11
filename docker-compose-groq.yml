@@ -19,6 +19,9 @@ services:
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY}
       SPRING_PROFILES_ACTIVE: prod,groq
+      LOG_DIR: /app/logs
+    volumes:
+      - ./logs/cloud:/app/logs
 
   analyst-agent:
     platform: linux/amd64
@@ -31,6 +34,9 @@ services:
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY}
       SPRING_PROFILES_ACTIVE: prod,groq
+      LOG_DIR: /app/logs
+    volumes:
+      - ./logs/cloud:/app/logs
 
   host-orchestrator:
     platform: linux/amd64
@@ -45,8 +51,10 @@ services:
       AGENTS_ANALYST_URL: http://analyst-agent:8082
       AGENT_PUBLIC_URL: http://host-orchestrator:8080
       SPRING_PROFILES_ACTIVE: prod
+      LOG_DIR: /app/logs
     volumes:
       - orchestrator_data:/app/data
+      - ./logs/cloud:/app/logs
     depends_on:
       - tester-agent
       - analyst-agent
