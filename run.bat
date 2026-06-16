@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 chcp 65001 >nul
 cd /d "%~dp0"
 
-set "UI_URL=http://localhost:3000"
+set "UI_URL=http://localhost:5173"
 set "MODES_URL=http://localhost:8080/api/modes"
 
 REM --- Language --------------------------------------------------------------

@@ -134,18 +134,23 @@ services:
       retries: 5
       start_period: 60s
 
-  # ── 6. a2a-ui (web interface) ────────────────────────────────────────────
-  a2a-ui:
+  # ── 6. aijun-ui (V2 workbench, local model mode) ─────────────────────────
+  aijun-ui:
     image: node:22-alpine
-    container_name: a2a-ui
+    container_name: aijun-ui
     working_dir: /app
     volumes:
-      - ./a2a-ui:/app
+      - ./aijun-ui:/app
+      # Anonymous volume keeps the container's (linux) node_modules separate from the host's.
+      - /app/node_modules
     ports:
-      - "3000:3000"
-    command: sh -c "npm install && npm run build && npm start"
+      - "5173:5173"
+    # Vite dev server: --host exposes it; the /a2a proxy forwards backend calls to the
+    # orchestrator. VITE_PLAN=local shows the "Local model" badge — no billing prompts.
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     environment:
-      NEXT_PUBLIC_DEFAULT_AGENT_CARDS_URL: http://host-orchestrator:8080/agent-cards.json
+      ORCHESTRATOR_URL: http://host-orchestrator:8080
+      VITE_PLAN: local
     depends_on:
       host-orchestrator:
         condition: service_healthy

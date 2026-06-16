@@ -15,8 +15,8 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    a2a-ui (:3000)                   │
-│              Next.js 15 + MUI 7 frontend            │
+│                   aijun-ui (:5173)                  │
+│          Vite + React 19 + Tailwind frontend        │
 └────────────────────┬────────────────────────────────┘
                      │ HTTP
 ┌────────────────────▼────────────────────────────────┐
@@ -57,7 +57,7 @@ Host Orchestrator при запуске обнаруживает агентов 
 | Отказоустойчивость | Resilience4j (circuit breaker, retry, time limiter) |
 | Хранилище | JPA + H2 (dev) / PostgreSQL (prod) |
 | Документация API | springdoc-openapi (Swagger UI по адресу `/swagger-ui`) |
-| Фронтенд | Next.js 15, MUI 7, TypeScript |
+| Фронтенд | Vite, React 19, Tailwind v4, TypeScript |
 | Сборка | Maven (мультимодульный), Docker |
 
 ## Запуск проекта
@@ -128,8 +128,8 @@ docker compose -f docker-compose-groq.yml up -d --no-build
 ```
 
 По умолчанию используется модель `llama-3.1-8b-instant`. Время ответа — 1–3 секунды.
-Веб-интерфейс на `http://localhost:3000` автоматически подключает оркестратор при старте
-(через `NEXT_PUBLIC_DEFAULT_AGENT_CARDS_URL`, указывающий на `/agent-cards.json`).
+Веб-интерфейс на `http://localhost:5173` работает с оркестратором через прокси `/a2a`
+(переменная `ORCHESTRATOR_URL`) — отдельное подключение агента не требуется.
 
 > **Примечание:** в Groq-режиме `/actuator/health` оркестратора показывает `DOWN`, потому что
 > его health-check Ollama не может достучаться до локальной Ollama. Это косметика — генерация
@@ -156,20 +156,23 @@ docker compose -f docker-compose-simple.yml up --build
 | Карточки обнаруженных агентов | `GET http://localhost:8080/api/agents` |
 | Схема настроек генерации (для UI) | `GET http://localhost:8080/api/modes` |
 | Swagger UI | `http://localhost:8080/swagger-ui` |
-| Веб-интерфейс | `http://localhost:3000` |
+| Веб-интерфейс | `http://localhost:5173` |
 
 ### Подключение веб-интерфейса к оркестратору
 
-1. Открыть **http://localhost:3000**
-2. Нажать кнопку **"Add Agent"** в шапке
-3. Ввести URL агента и нажать **Add Agent**:
-   ```
-   http://host-orchestrator:8080/.well-known/agent-card.json
-   ```
-4. В списке появится **"QA Analysis Orchestrator"** — выбрать его и отправить текст требований
+`aijun-ui` подключается к оркестратору автоматически — отдельных действий не нужно:
+
+1. Открыть **http://localhost:5173**
+2. Выбрать инструмент (например, «Генерация тест-кейсов»), ввести требования и нажать кнопку генерации.
+
+Все запросы UI идут через прокси `/a2a` на оркестратор (адрес задаёт `ORCHESTRATOR_URL`,
+по умолчанию `http://host-orchestrator:8080` в Docker). Прокси обходит CORS и позволяет не
+трогать бэкенд.
 
 > **Почему `host-orchestrator:8080`, а не `localhost:8080`?**
-> Все сервисы работают внутри Docker. Прокси-запросы от a2a-ui выполняются серверной стороной Next.js *внутри контейнера*, где `localhost` — это сам контейнер a2a-ui, а не оркестратор. Имя `host-orchestrator` — это имя сервиса в Docker-сети, по которому контейнеры находят друг друга.
+> В Docker прокси `aijun-ui` (Vite dev server) ходит к оркестратору по имени сервиса в
+> Docker-сети `host-orchestrator`. `localhost` внутри контейнера указывал бы на сам контейнер UI.
+> При локальном запуске вне Docker используйте `ORCHESTRATOR_URL=http://localhost:8080`.
 
 ### Пример запроса
 
@@ -251,7 +254,7 @@ Java или фронтенда. Новые режимы (тест-план, че
 под `qa.modes`.
 
 Фронтенд рендерит экран настроек динамически по `GET /api/modes`, а при недоступности бэка
-откатывается на встроенный конфиг (`a2a-ui/src/config/modes.ts`).
+откатывается на встроенный конфиг (`aijun-ui/src/config/modes.ts`).
 
 ## Локальная разработка (без Docker)
 
@@ -277,10 +280,12 @@ cd host-orchestrator && mvn spring-boot:run -Dspring-boot.run.profiles=dev
 mvn test -pl host-orchestrator
 ```
 
-### Фронтенд (a2a-ui)
+### Фронтенд (aijun-ui)
 
 ```bash
-cd a2a-ui
+cd aijun-ui
 npm install
-npm run dev   # http://localhost:3000
+# Vite dev server на :5173, прокси /a2a → оркестратор.
+# VITE_PLAN=local|free|pro, ORCHESTRATOR_URL — адрес оркестратора (по умолчанию http://localhost:8080).
+ORCHESTRATOR_URL=http://localhost:8080 npm run dev   # http://localhost:5173
 ```

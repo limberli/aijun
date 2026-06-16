@@ -20,7 +20,7 @@ import java.util.UUID;
  *
  * AgentCard:  GET  /.well-known/agent-card.json
  * Tasks:      POST /   (JSON-RPC 2.0)
- *   - method "message/send"  — A2A SDK 0.3.x+ (a2a-ui)
+ *   - method "message/send"  — A2A SDK 0.3.x+ (aijun-ui web client)
  *   - method "tasks/send"    — legacy internal protocol (tester/analyst agents)
  */
 @RestController
@@ -70,7 +70,7 @@ public class A2AController {
         };
     }
 
-    /** A2A SDK 0.3.x+ protocol used by a2a-ui. Returns a Task object. */
+    /** A2A SDK 0.3.x+ protocol used by the aijun-ui web client. Returns a Task object. */
     private ResponseEntity<?> handleMessageSend(A2ARequest request) {
         String documentText = extractText(request.params());
         if (documentText == null || documentText.isBlank()) {

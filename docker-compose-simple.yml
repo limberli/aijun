@@ -74,18 +74,22 @@ services:
       - tester-agent
       - analyst-agent
 
-  a2a-ui:
+  aijun-ui:
     image: node:22-alpine
-    container_name: a2a-ui
+    container_name: aijun-ui
     working_dir: /app
     volumes:
-      - ./a2a-ui:/app
+      - ./aijun-ui:/app
+      # Anonymous volume keeps the container's (linux) node_modules separate from the host's.
+      - /app/node_modules
     ports:
-      - "3000:3000"
-    command: sh -c "npm install && npm run build && npm start"
+      - "5173:5173"
+    # Vite dev server; /a2a proxy forwards backend calls to the orchestrator.
+    # VITE_PLAN=local — local Ollama model, no limits/billing ("Local model" badge).
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     environment:
-      # UI loads this list of agent-card URLs on startup and auto-connects the orchestrator.
-      NEXT_PUBLIC_DEFAULT_AGENT_CARDS_URL: http://host-orchestrator:8080/agent-cards.json
+      ORCHESTRATOR_URL: http://host-orchestrator:8080
+      VITE_PLAN: local
     depends_on:
       - host-orchestrator
 

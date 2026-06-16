@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `host-orchestrator` — entry point (:8080), orchestrates the pipeline, exposes REST + A2A endpoints, persists conversations
 - `tester-agent` (:8081) — generates structured QA test cases via Ollama/Spring AI
 - `analyst-agent` (:8082) — produces risk analysis via Ollama/Spring AI
-- `a2a-ui/` — Next.js v15 + MUI v7 web UI (separate npm project, see `a2a-ui/CLAUDE.md`)
+- `aijun-ui/` — AI JUN V2 web UI: Vite + React 19 + Tailwind v4 (separate npm project, see `aijun-ui/README.md` and `aijun-ui/CHANGELOG.rst`)
 
 ## Build & Run Commands
 
@@ -38,9 +38,9 @@ OLLAMA_MODEL=qwen2.5:32b docker compose -f docker-compose-qwen.yml up --build
 # Cloud stack (Groq, no GPU needed) — logs to ./logs/cloud
 docker compose -f docker-compose-groq.yml up --build
 
-# a2a-ui development (from a2a-ui/)
-npm run dev      # dev server
-npm run build    # production build
+# aijun-ui development (from aijun-ui/) — Vite dev server proxies /a2a → orchestrator
+npm run dev      # dev server on :5173 (set VITE_PLAN=local|free|pro, ORCHESTRATOR_URL=...)
+npm run build    # production build (tsc -b && vite build)
 npm run lint     # ESLint
 ```
 

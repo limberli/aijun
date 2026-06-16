@@ -7,7 +7,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-UI_URL="http://localhost:3000"
+UI_URL="http://localhost:5173"
 MODES_URL="http://localhost:8080/api/modes"
 
 c_err()  { printf "\033[31m%s\033[0m\n" "$*" >&2; }

@@ -7,13 +7,16 @@ import limberli.common.a2a.A2ARequest;
 import limberli.common.a2a.A2AResponse;
 import limberli.common.exception.AgentUnavailableException;
 import limberli.common.exception.LLMTimeoutException;
+import limberli.common.util.RateLimitSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -82,16 +85,49 @@ public class A2AAgentClient {
         } catch (ResourceAccessException e) {
             // Connection refused, timeout at network layer — agent is down
             throw new AgentUnavailableException("Agent unreachable at " + agentUrl, e);
+        } catch (RestClientResponseException e) {
+            // Agent answered with a non-2xx (e.g. 429 from the LLM provider). Carry the body and the
+            // Retry-After so the orchestrator can forward an accurate reset time to clients.
+            String body = e.getResponseBodyAsString();
+            Long retryAfter = retryAfterFromHeaders(e.getResponseHeaders());
+            if (retryAfter == null) {
+                retryAfter = RateLimitSupport.retryAfterSeconds(body);
+            }
+            boolean rateLimited = e.getStatusCode().value() == 429 || RateLimitSupport.isRateLimited(body);
+            throw new AgentUnavailableException(
+                    "Agent error at " + agentUrl + " (" + e.getStatusCode().value() + "): " + body,
+                    e, retryAfter, rateLimited);
         } catch (RestClientException e) {
             throw new AgentUnavailableException("Agent HTTP error at " + agentUrl + ": " + e.getMessage(), e);
+        }
+    }
+
+    private Long retryAfterFromHeaders(HttpHeaders headers) {
+        if (headers == null) {
+            return null;
+        }
+        String value = headers.getFirst(HttpHeaders.RETRY_AFTER);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException ignored) {
+            return null; // HTTP-date form is not produced by our agents
         }
     }
 
     @SuppressWarnings("unused") // called by Resilience4j via reflection
     private CompletableFuture<String> fallbackSendTask(String agentUrl, String documentText, Map<String, Object> metadata, Exception e) {
         log.warn("Agent fallback triggered: url={} cause={}", agentUrl, e.getMessage());
-        return CompletableFuture.failedFuture(
-                new AgentUnavailableException("Agent at " + agentUrl + " is unavailable after retries: " + e.getMessage(), e)
-        );
+        // Preserve rate-limit details from the underlying cause so they reach the client.
+        Long retryAfter = null;
+        boolean rateLimited = false;
+        if (e instanceof AgentUnavailableException cause) {
+            retryAfter = cause.getRetryAfterSeconds();
+            rateLimited = cause.isRateLimited();
+        }
+        return CompletableFuture.failedFuture(new AgentUnavailableException(
+                "Agent at " + agentUrl + " is unavailable after retries: " + e.getMessage(), e, retryAfter, rateLimited));
     }
 }
