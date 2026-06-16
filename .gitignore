@@ -47,5 +47,6 @@ build/
 .idea
 /qa-junior-ai-tool/.idea/
 /.idea/codeStyles/
-/a2a-ui/CLAUDE.md
 !**/CLAUDE.md
+# Runtime logs written inside module dirs
+*/logs/

@@ -5,6 +5,7 @@ import limberli.common.exception.AgentUnavailableException;
 import limberli.common.exception.DocumentParseException;
 import limberli.common.exception.LLMTimeoutException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -20,9 +21,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AgentUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleAgentUnavailable(AgentUnavailableException ex) {
-        log.warn("Agent unavailable: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse("AGENT_UNAVAILABLE", ex.getMessage()));
+        log.warn("Agent unavailable (rateLimited={}, retryAfter={}s): {}",
+                ex.isRateLimited(), ex.getRetryAfterSeconds(), ex.getMessage());
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
+        if (ex.getRetryAfterSeconds() != null) {
+            builder.header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()));
+        }
+        return builder.body(new ErrorResponse(
+                "AGENT_UNAVAILABLE", ex.getMessage(), ex.getRetryAfterSeconds(), ex.isRateLimited()));
     }
 
     @ExceptionHandler(LLMTimeoutException.class)

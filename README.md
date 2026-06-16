@@ -174,8 +174,8 @@ AI JUN построен на мультиагентной основе с исп
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                  🖥️  ФРОНТЕНД  ·  a2a-ui (:3000)         │
-│              Next.js 15  ·  MUI 7  ·  TypeScript         │
+│                  🖥️  ФРОНТЕНД  ·  aijun-ui (:5173)       │
+│              Vite 8  ·  React 19  ·  Tailwind v4         │
 └───────────────────────────┬──────────────────────────────┘
                             │ HTTP / REST
 ┌───────────────────────────▼──────────────────────────────┐
@@ -238,7 +238,7 @@ run.bat
 2. ⚙️ Предложит режим: **Groq** (облачный LLM, быстро, нужен бесплатный API-ключ) или **Ollama** (локальная модель `phi3:mini`, без ключа, медленнее).
 3. 🐳 Проверит, что Docker установлен и запущен.
 4. 🏗️ Соберёт и поднимет весь стек (`docker compose ... up --build -d`).
-5. ⏳ Дождётся готовности сервисов и **сам откроет UI** → `http://localhost:3000`.
+5. ⏳ Дождётся готовности сервисов и **сам откроет UI** → `http://localhost:5173`.
 
 Остановить стек:
 
@@ -276,8 +276,8 @@ docker compose -f docker-compose-simple.yml up --build
 # Соберите все backend-модули
 mvn package -DskipTests
 
-# Запустите UI в режиме разработки
-cd a2a-ui
+# Запустите UI в режиме разработки (Vite, прокси /a2a → оркестратор)
+cd aijun-ui
 npm install
 npm run dev
 ```
@@ -315,7 +315,7 @@ curl -X POST http://localhost:8080/api/analyze \
 
 | Эндпоинт | Назначение |
 |---|---|
-| `🌐 http://localhost:3000` | Веб-интерфейс |
+| `🌐 http://localhost:5173` | Веб-интерфейс (AI JUN V2) |
 | `📜 http://localhost:8080/swagger-ui` | Интерактивная документация API |
 | `🕓 GET /api/history` | Постраничная история обращений |
 | `🃏 GET /.well-known/agent-card.json` | Эндпоинт обнаружения A2A |
@@ -594,8 +594,8 @@ AI JUN is built on a multi-agent backbone using the **[A2A (Agent-to-Agent) Prot
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                  🖥️  FRONTEND  ·  a2a-ui (:3000)         │
-│              Next.js 15  ·  MUI 7  ·  TypeScript         │
+│                  🖥️  FRONTEND  ·  aijun-ui (:5173)       │
+│              Vite 8  ·  React 19  ·  Tailwind v4         │
 └───────────────────────────┬──────────────────────────────┘
                             │ HTTP / REST
 ┌───────────────────────────▼──────────────────────────────┐
@@ -658,7 +658,7 @@ The `run.sh` script will:
 2. ⚙️ Offer a mode: **Groq** (cloud LLM, fast, needs a free API key) or **Ollama** (local `phi3:mini` model, no key, slower).
 3. 🐳 Verify Docker is installed and running.
 4. 🏗️ Build and start the whole stack (`docker compose ... up --build -d`).
-5. ⏳ Wait until services are ready and **open the UI for you** → `http://localhost:3000`.
+5. ⏳ Wait until services are ready and **open the UI for you** → `http://localhost:5173`.
 
 Stop the stack:
 
@@ -696,8 +696,8 @@ docker compose -f docker-compose-simple.yml up --build
 # Build all backend modules
 mvn package -DskipTests
 
-# Run the UI in dev mode
-cd a2a-ui
+# Run the UI in dev mode (Vite, proxies /a2a → orchestrator)
+cd aijun-ui
 npm install
 npm run dev
 ```
@@ -735,7 +735,7 @@ curl -X POST http://localhost:8080/api/analyze \
 
 | Endpoint | Purpose |
 |---|---|
-| `🌐 http://localhost:3000` | Web UI |
+| `🌐 http://localhost:5173` | Web UI (AI JUN V2) |
 | `📜 http://localhost:8080/swagger-ui` | Interactive API docs |
 | `🕓 GET /api/history` | Paginated conversation history |
 | `🃏 GET /.well-known/agent-card.json` | A2A discovery endpoint |

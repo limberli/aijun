@@ -7,6 +7,43 @@ Changelog
 проект придерживается семантического версионирования.
 
 
+v0.3-beta — 2026-06-16
+======================
+
+Added (добавлено)
+-----------------
+- **Новый интерфейс AI JUN V2 (``aijun-ui``)** — Vite + React 19 + Tailwind v4,
+  на ``:5173``. Подключается к оркестратору через прокси ``/a2a`` (``ORCHESTRATOR_URL``).
+  Встроен во все compose-стеки: ``VITE_PLAN=local`` для локальных
+  (``docker-compose.yml``, ``-simple``, ``-qwen``) и ``VITE_PLAN=free`` для
+  ``docker-compose-groq.yml``. Детали UI — в ``aijun-ui/CHANGELOG.rst``.
+- **Проброс rate-limit провайдера до клиента.** При лимите/ошибке LLM агенты
+  (tester/analyst) больше не отдают общий 500: новый ``LlmErrorAdvice`` ловит
+  ``NonTransientAiException`` и возвращает **HTTP 429** с заголовком ``Retry-After``
+  и исходным текстом Groq в теле (код ``RATE_LIMIT``). Оркестратор форвардит
+  ``Retry-After`` и добавляет в тело 503 поля ``retryAfterSeconds`` и
+  ``rateLimited``. Общий парсер — ``common`` ``RateLimitSupport`` (понимает
+  «try again in 26m53s»). Позволяет UI показывать точный отсчёт до сброса лимита.
+
+Changed (изменено)
+------------------
+- ``ResilientChatClient`` (tester): корректно парсит минуты в «try again in …» и
+  **не ретраит**, если провайдер просит ждать дольше ``MAX_BACKOFF`` (например,
+  дневной лимит TPD) — 429 всплывает быстро, в пределах 30-сек таймаута
+  оркестратора, вместо его срабатывания по таймауту.
+- ``ErrorResponse`` дополнен полями ``retryAfterSeconds`` / ``rateLimited``
+  (опускаются из JSON, когда не заданы); ``AgentUnavailableException`` несёт те же
+  данные через всю resilience-цепочку (включая fallback).
+
+Removed (удалено)
+-----------------
+- **Старый интерфейс ``a2a-ui``** (Next.js + MUI) удалён, чтобы не путать
+  пользователей двумя UI. Его заменяет ``aijun-ui``. Также удалён ставший избыточным
+  ``docker-compose-groq-ui-v2.yml`` (его роль теперь выполняет ``docker-compose-groq.yml``
+  с сервисом ``aijun-ui``). Ссылки во всех ``docker-compose*.yml``, ``run.sh`` / ``run.bat``,
+  README и docs переведены на ``aijun-ui`` (``:5173``).
+
+
 v0.2-beta — 2026-06-11
 ======================
 

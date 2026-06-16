@@ -108,21 +108,26 @@ services:
       retries: 5
       start_period: 60s
 
-  # ── 6. a2a-ui (A2A Protocol web interface) ───────────────────────────────
-  # Clone https://github.com/a2anet/a2a-ui into ./a2a-ui before running.
-  # Configure it to point to the Host Orchestrator at http://host-orchestrator:8080.
-  #
-  # a2a-ui:
-  #   build:
-  #     context: ./a2a-ui
-  #   container_name: a2a-ui
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     NEXT_PUBLIC_A2A_DEFAULT_AGENT: http://localhost:8080
-  #   depends_on:
-  #     host-orchestrator:
-  #       condition: service_healthy
+  # ── 6. aijun-ui (AI JUN V2 web interface) ────────────────────────────────
+  aijun-ui:
+    image: node:22-alpine
+    container_name: aijun-ui
+    working_dir: /app
+    volumes:
+      - ./aijun-ui:/app
+      # Anonymous volume keeps the container's (linux) node_modules separate from the host's.
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    # Vite dev server; /a2a proxy forwards backend calls to the orchestrator.
+    # VITE_PLAN=local — local Ollama model, no limits/billing ("Local model" badge).
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      ORCHESTRATOR_URL: http://host-orchestrator:8080
+      VITE_PLAN: local
+    depends_on:
+      host-orchestrator:
+        condition: service_healthy
 
 volumes:
   ollama_data:
