@@ -31,7 +31,8 @@ if [ "$LANG_SEL" = "ru" ]; then
   T_DOCKER_DOWN="Docker не запущен. Запустите Docker Desktop и повторите."
   T_PICK="Выберите режим запуска:"
   T_OPT_GROQ="Groq — облачный LLM, быстро, без GPU (нужен API-ключ)"
-  T_OPT_OLLAMA="Ollama — локальная модель phi3:mini (без ключа, медленнее)"
+  T_OPT_OLLAMA="Ollama — локальная Qwen2.5 на GPU (без ключа, нужен NVIDIA GPU)"
+  T_OPT_SIMPLE="Ollama — phi3:mini, лёгкий стек (CPU, для мощного ноутбука/теста)"
   T_CHOICE="Ваш выбор [1]: "
   T_BADCHOICE="Неизвестный выбор:"
   T_NEEDKEY="Для Groq нужен API-ключ (https://console.groq.com → API Keys)."
@@ -50,7 +51,8 @@ else
   T_DOCKER_DOWN="Docker is not running. Start Docker Desktop and try again."
   T_PICK="Choose start mode:"
   T_OPT_GROQ="Groq   — cloud LLM, fast, no GPU (needs API key)"
-  T_OPT_OLLAMA="Ollama — local phi3:mini model (no key, slower)"
+  T_OPT_OLLAMA="Ollama — local Qwen2.5 on GPU (no key, needs NVIDIA GPU)"
+  T_OPT_SIMPLE="Ollama — phi3:mini, light stack (CPU, for a powerful laptop/test)"
   T_CHOICE="Your choice [1]: "
   T_BADCHOICE="Unknown choice:"
   T_NEEDKEY="Groq needs an API key (https://console.groq.com → API Keys)."
@@ -74,11 +76,13 @@ if ! docker info >/dev/null 2>&1; then c_err "$T_DOCKER_DOWN"; exit 1; fi
 echo "$T_PICK"
 echo "  1) $T_OPT_GROQ"
 echo "  2) $T_OPT_OLLAMA"
+echo "  3) $T_OPT_SIMPLE"
 printf "%s" "$T_CHOICE"
 read -r choice
 case "${choice:-1}" in
   1|"") MODE="groq";   COMPOSE_FILE="docker-compose-groq.yml" ;;
-  2)    MODE="ollama"; COMPOSE_FILE="docker-compose-simple.yml" ;;
+  2)    MODE="ollama"; COMPOSE_FILE="docker-compose-qwen.yml" ;;
+  3)    MODE="ollama"; COMPOSE_FILE="docker-compose-simple.yml" ;;
   *)    c_err "$T_BADCHOICE $choice"; exit 1 ;;
 esac
 
