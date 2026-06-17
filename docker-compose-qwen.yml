@@ -31,7 +31,8 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      # ollama/ollama:latest не содержит curl — проверяем родным CLI (тот же API).
+      test: ["CMD", "ollama", "list"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -40,15 +41,19 @@ services:
   # ── 2. Model pull (one-shot init container) ─────────────────────────────
   # Pulls the configured Qwen2.5 model before any agent starts.
   ollama-model-init:
-    image: curlimages/curl:latest
+    # Тот же образ, что у сервиса ollama (уже скачан) — пуллим модель родным CLI.
+    # OLLAMA_HOST направляет pull на удалённый сервер ollama; контейнер блокируется
+    # до завершения скачивания и завершается с кодом 0.
+    image: ollama/ollama:latest
     container_name: ollama-model-init
     depends_on:
       ollama:
         condition: service_healthy
-    entrypoint: >
-      sh -c "curl -sf -X POST http://ollama:11434/api/pull
-        -d '{\"name\":\"${OLLAMA_MODEL:-qwen2.5:14b}\",\"stream\":false}'
-        --max-time 1800"
+    environment:
+      OLLAMA_HOST: ollama:11434
+    # Не переопределяем entrypoint (он в образе указывает на бинарник ollama) —
+    # передаём только аргументы, иначе ollama не находится в $PATH.
+    command: ["pull", "${OLLAMA_MODEL:-qwen2.5:14b}"]
     restart: "no"
 
   # ── 3. Tester Agent ─────────────────────────────────────────────────────
@@ -65,6 +70,10 @@ services:
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
       SPRING_PROFILES_ACTIVE: prod
       LOG_DIR: /app/logs
+      # Страховка от runaway-генерации на локальной модели (qwen2.5): потолок ответа
+      # и ненулевая температура, чтобы greedy-декодинг не зацикливался. Только локально.
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MAXTOKENS: "4096"
+      SPRING_AI_OPENAI_CHAT_OPTIONS_TEMPERATURE: "0.3"
     volumes:
       - ./logs/local:/app/logs
     depends_on:
@@ -91,6 +100,10 @@ services:
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
       SPRING_PROFILES_ACTIVE: prod
       LOG_DIR: /app/logs
+      # Страховка от runaway-генерации на локальной модели (qwen2.5): потолок ответа
+      # и ненулевая температура, чтобы greedy-декодинг не зацикливался. Только локально.
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MAXTOKENS: "4096"
+      SPRING_AI_OPENAI_CHAT_OPTIONS_TEMPERATURE: "0.3"
     volumes:
       - ./logs/local:/app/logs
     depends_on:

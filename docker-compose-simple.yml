@@ -15,14 +15,15 @@ services:
       - ollama_data:/root/.ollama
 
   ollama-model-init:
-    image: curlimages/curl:latest
-    platform: linux/amd64
+    # Тот же образ, что у сервиса ollama (уже скачан) — пуллим модель родным CLI.
+    image: ollama/ollama:latest
     depends_on:
       - ollama
-    entrypoint: >
-      sh -c "curl -sf -X POST http://ollama:11434/api/pull
-        -d '{\"name\":\"phi3:mini\",\"stream\":false}'
-        --max-time 600"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    # Не переопределяем entrypoint (он в образе указывает на бинарник ollama) —
+    # передаём только аргументы, иначе ollama не находится в $PATH.
+    command: ["pull", "phi3:mini"]
     restart: "no"
 
   tester-agent:

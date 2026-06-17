@@ -11,7 +11,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      # ollama/ollama:latest не содержит curl — проверяем родным CLI (тот же API).
+      test: ["CMD", "ollama", "list"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -21,16 +22,19 @@ services:
   # Pulls qwen2.5:7b into the shared ollama_data volume before any agent starts.
   # Uses condition: service_completed_successfully so agents wait for the pull.
   ollama-model-init:
-    image: curlimages/curl:latest
+    # Тот же образ, что у сервиса ollama (уже скачан) — пуллим модель родным CLI.
+    # OLLAMA_HOST направляет pull на удалённый сервер ollama; контейнер блокируется
+    # до завершения скачивания и завершается с кодом 0.
+    image: ollama/ollama:latest
     container_name: ollama-model-init
-    platform: linux/amd64
     depends_on:
       ollama:
         condition: service_healthy
-    entrypoint: >
-      sh -c "curl -sf -X POST http://ollama:11434/api/pull
-        -d '{\"name\":\"qwen2.5:7b\",\"stream\":false}'
-        --max-time 600"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    # Не переопределяем entrypoint (он в образе указывает на бинарник ollama) —
+    # передаём только аргументы, иначе ollama не находится в $PATH.
+    command: ["pull", "qwen2.5:7b"]
     restart: "no"
 
   # ── 3. Tester Agent ─────────────────────────────────────────────────────

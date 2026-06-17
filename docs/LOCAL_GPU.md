@@ -138,6 +138,31 @@ QA_PLANNER_BATCHSIZE=2 OLLAMA_MODEL=qwen2.5:14b \
 
 ## 6. Топ проблем и решения
 
+### `container ollama is unhealthy` / `dependency ollama failed to start`
+- **Симптом:** при `up` сервис `ollama` помечается `unhealthy` (~через 2–3 мин), и все
+  зависимые контейнеры падают с `dependency failed to start`. При этом в логах самого
+  `ollama` всё хорошо — `Listening on [::]:11434`.
+- **Причина:** сам сервер работает, падает **healthcheck**. Старый вариант проверки
+  использовал `curl`, а в образе `ollama/ollama:latest` бинарника `curl` нет — команда
+  падает на каждой попытке.
+- **Решение:** healthcheck уже исправлен на родной CLI (`test: ["CMD", "ollama", "list"]`).
+  Если всё ещё видишь ошибку — обнови репозиторий и перезапусти:
+  ```bash
+  docker compose -f docker-compose-qwen.yml down
+  docker compose -f docker-compose-qwen.yml up --build
+  ```
+  Проверить health вручную: `docker exec ollama ollama list` (код 0 = здоров).
+
+### `ollama-model-init ... exit 127` (модель не скачивается)
+- **Симптом:** `ollama` поднялся (`Healthy`), но init-контейнер падает с
+  `service "ollama-model-init" didn't complete successfully: exit 127`.
+- **Причина:** `exit 127` = «команда не найдена». Старый init тащил отдельный образ
+  `curlimages/curl` и дёргал pull через `sh -c "curl ..."`; образ дрейфанул и нужного
+  бинарника/шелла в нём не оказалось.
+- **Решение:** init уже переведён на родной `ollama pull` (тот же образ `ollama/ollama`,
+  без лишней загрузки). Обнови репозиторий и перезапусти. Если нужно скачать модель
+  вручную: `docker exec -it ollama ollama pull qwen2.5:14b`.
+
 ### GPU не используется (генерация на CPU, очень медленно)
 - **Симптом:** ответ идёт минутами, `nvidia-smi` показывает 0% во время генерации.
 - **Причина:** Docker не имеет доступа к GPU (нет NVIDIA Container Toolkit).
