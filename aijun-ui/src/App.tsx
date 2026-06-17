@@ -8,9 +8,11 @@ import { PlanScreen } from '@/components/PlanScreen'
 import { BillingScreen } from '@/components/BillingScreen'
 import { ACTIVE_PLAN } from '@/config/plan'
 import { NavigationProvider, type View } from '@/lib/navigation'
+import { useI18n } from '@/lib/i18n'
 
 /** Lightweight state-based router: start menu ↔ tool views ↔ plan / billing screens. */
 export default function App() {
+  const { t } = useI18n()
   const [view, setView] = useState<View>('menu')
 
   const lead =
@@ -21,7 +23,7 @@ export default function App() {
         className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-brand-cyan/30 hover:text-brand-cyan"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Меню
+        {t('nav.menu')}
       </button>
     ) : undefined
 
@@ -38,7 +40,7 @@ export default function App() {
         ) : (
           <Crown className="h-3.5 w-3.5 text-brand-cyan" />
         )}
-        {isLocal ? ACTIVE_PLAN.label : `Тариф: ${ACTIVE_PLAN.label}`}
+        {isLocal ? ACTIVE_PLAN.label : `${t('plan.badgePrefix')} ${ACTIVE_PLAN.label}`}
       </button>
     ) : undefined
 

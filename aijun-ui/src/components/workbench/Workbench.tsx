@@ -9,6 +9,7 @@ import { AgentUnavailableError } from '@/lib/api/errors'
 import { parseAggregated } from '@/lib/parseAggregated'
 import { buildQaMetadata, defaultSelections } from '@/lib/qaSettings'
 import { useRateLimit } from '@/lib/rateLimit'
+import { useI18n } from '@/lib/i18n'
 import { RequirementsPanel } from '@/components/workbench/RequirementsPanel'
 import { TestCaseSettings } from '@/components/workbench/TestCaseSettings'
 import { ResultsPanel } from '@/components/workbench/ResultsPanel'
@@ -17,6 +18,7 @@ const MODE_ID = 'test-cases'
 
 /** Test-case generation tool: left = requirements + settings, right = parsed cases + stats. */
 export function Workbench() {
+  const { t, lang } = useI18n()
   const [modes, setModes] = useState<ModeSchema[]>(DEFAULT_MODES)
   const mode = useMemo(
     () => modes.find((m) => m.id === MODE_ID) ?? modes[0] ?? DEFAULT_MODES[0],
@@ -72,7 +74,7 @@ export function Workbench() {
     setResult(null)
     try {
       // Risk analysis is a separate tool now → never request it here.
-      const metadata = buildQaMetadata(mode.id, selections, false)
+      const metadata = buildQaMetadata(mode.id, selections, false, lang)
       const { aggregated } = await analyze(documentText, metadata, controller.signal)
       setResult(parseAggregated(aggregated, false))
     } catch (e) {
@@ -104,7 +106,7 @@ export function Workbench() {
           loading={loading}
           onGenerate={handleGenerate}
           onCancel={handleCancel}
-          generateLabel="Сгенерировать тест-кейсы"
+          generateLabel={t('btn.generateTests')}
           settings={
             <TestCaseSettings mode={mode} selections={selections} onSelectionsChange={setSelections} />
           }

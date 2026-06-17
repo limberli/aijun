@@ -6,6 +6,7 @@ import { AgentUnavailableError } from '@/lib/api/errors'
 import { parseRequirementsAnalysis } from '@/lib/parseAggregated'
 import { buildQaMetadata, defaultSelections } from '@/lib/qaSettings'
 import { useRateLimit } from '@/lib/rateLimit'
+import { useI18n } from '@/lib/i18n'
 import { DEFAULT_MODES } from '@/config/modes'
 import { RequirementsPanel } from '@/components/workbench/RequirementsPanel'
 import { AnalysisReportPanel } from '@/components/workbench/AnalysisReportPanel'
@@ -18,6 +19,7 @@ import { AnalysisReportPanel } from '@/components/workbench/AnalysisReportPanel'
  * here. Eliminating that waste needs a backend change (Phase 2) — out of scope for now.
  */
 export function RequirementsAnalysisWorkbench() {
+  const { t, lang } = useI18n()
   const [documentText, setDocumentText] = useState('')
   const [filename, setFilename] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -50,7 +52,7 @@ export function RequirementsAnalysisWorkbench() {
     setError(null)
     setReport(null)
     try {
-      const metadata = buildQaMetadata('test-cases', defaultSelections(DEFAULT_MODES[0]), true)
+      const metadata = buildQaMetadata('test-cases', defaultSelections(DEFAULT_MODES[0]), true, lang)
       const { aggregated } = await analyze(documentText, metadata, controller.signal)
       setReport(parseRequirementsAnalysis(aggregated))
     } catch (e) {
@@ -82,7 +84,7 @@ export function RequirementsAnalysisWorkbench() {
           loading={loading}
           onGenerate={handleGenerate}
           onCancel={handleCancel}
-          generateLabel="Проанализировать требования"
+          generateLabel={t('btn.analyze')}
         />
         <AnalysisReportPanel report={report} loading={loading} error={error} />
       </div>

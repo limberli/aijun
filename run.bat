@@ -22,7 +22,8 @@ if "%L%"=="ru" (
   set "T_DOWN=Docker не запущен. Запустите Docker Desktop и повторите."
   set "T_PICK=Выберите режим запуска:"
   set "T_G=Groq   - облачный LLM, быстро, без GPU (нужен API-ключ)"
-  set "T_O=Ollama - локальная модель phi3:mini (без ключа, медленнее)"
+  set "T_O=Ollama - локальная Qwen2.5 на GPU (без ключа, нужен NVIDIA GPU)"
+  set "T_S=Ollama - phi3:mini, лёгкий стек (CPU, для мощного ноутбука/теста)"
   set "T_CH=Ваш выбор [1]: "
   set "T_BAD=Неизвестный выбор:"
   set "T_NEED=Для Groq нужен API-ключ (https://console.groq.com - API Keys)."
@@ -42,7 +43,8 @@ if "%L%"=="ru" (
   set "T_DOWN=Docker is not running. Start Docker Desktop and try again."
   set "T_PICK=Choose start mode:"
   set "T_G=Groq   - cloud LLM, fast, no GPU (needs API key)"
-  set "T_O=Ollama - local phi3:mini model (no key, slower)"
+  set "T_O=Ollama - local Qwen2.5 on GPU (no key, needs NVIDIA GPU)"
+  set "T_S=Ollama - phi3:mini, light stack (CPU, for a powerful laptop/test)"
   set "T_CH=Your choice [1]: "
   set "T_BAD=Unknown choice:"
   set "T_NEED=Groq needs an API key (https://console.groq.com - API Keys)."
@@ -69,11 +71,13 @@ REM --- Pick mode -------------------------------------------------------------
 echo !T_PICK!
 echo   1^) !T_G!
 echo   2^) !T_O!
+echo   3^) !T_S!
 set /p choice="!T_CH!"
 set "MODE="
 if "!choice!"=="" set "MODE=groq" & set "COMPOSE_FILE=docker-compose-groq.yml"
 if "!choice!"=="1" set "MODE=groq" & set "COMPOSE_FILE=docker-compose-groq.yml"
-if "!choice!"=="2" set "MODE=ollama" & set "COMPOSE_FILE=docker-compose-simple.yml"
+if "!choice!"=="2" set "MODE=ollama" & set "COMPOSE_FILE=docker-compose-qwen.yml"
+if "!choice!"=="3" set "MODE=ollama" & set "COMPOSE_FILE=docker-compose-simple.yml"
 if not defined MODE ( echo [ERROR] !T_BAD! !choice! & pause & exit /b 1 )
 
 REM --- Groq: key entry step (.env, git-ignored) ------------------------------

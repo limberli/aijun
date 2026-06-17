@@ -30,8 +30,10 @@ export interface QaSettings {
   selections: QaSelections
 }
 
-/** Shape placed into the A2A message metadata: { qa, riskAnalysis }. riskAnalysis is opt-in. */
+/** Shape placed into the A2A message metadata: { qa, riskAnalysis, lang }. riskAnalysis is opt-in. */
 export interface QaMetadata {
   qa: QaSettings
   riskAnalysis: boolean
+  /** Output language for the generated content ("ru" | "en"). */
+  lang?: 'ru' | 'en'
 }

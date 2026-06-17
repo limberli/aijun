@@ -13,12 +13,13 @@ import {
   ShieldAlert,
   Target,
 } from 'lucide-react'
+import type { LocPair } from '@/lib/i18n'
 
 /** A tool the user can open. `view` is the route key handled by App; undefined = not built yet. */
 export interface MenuTool {
   id: string
-  label: string
-  description: string
+  label: LocPair
+  description: LocPair
   icon: LucideIcon
   available: boolean
   /** View key opened on click (only when available). */
@@ -27,8 +28,8 @@ export interface MenuTool {
 
 export interface MenuCategory {
   id: string
-  label: string
-  description: string
+  label: LocPair
+  description: LocPair
   icon: LucideIcon
   available: boolean
   tools?: MenuTool[]
@@ -36,42 +37,47 @@ export interface MenuCategory {
 
 /**
  * AI JUN V2 main menu (v0.3 structure). Each tool maps to an agent. Working today:
- * «Написание документации» → «Анализ требований» and «Генерация тест-кейсов».
- * Everything else is on the roadmap.
+ * Documentation → Requirements analysis and Test-case generation. Everything else is on the roadmap.
  */
 export const MENU: MenuCategory[] = [
   {
     id: 'processes',
-    label: 'Построение процессов',
-    description: 'Стратегия, планирование и оценка тестирования',
+    label: { ru: 'Построение процессов', en: 'Process building' },
+    description: {
+      ru: 'Стратегия, планирование и оценка тестирования',
+      en: 'Test strategy, planning and estimation',
+    },
     icon: Network,
     available: false,
     tools: [
       {
         id: 'test-strategy',
-        label: 'Тест-стратегия для проекта',
-        description: 'Стратегия тестирования под проект',
+        label: { ru: 'Тест-стратегия для проекта', en: 'Project test strategy' },
+        description: { ru: 'Стратегия тестирования под проект', en: 'Testing strategy for the project' },
         icon: Target,
         available: false,
       },
       {
         id: 'test-plan',
-        label: 'Тест-план',
-        description: 'Генерация по шаблону IEEE 829 / ISO 29119',
+        label: { ru: 'Тест-план', en: 'Test plan' },
+        description: {
+          ru: 'Генерация по шаблону IEEE 829 / ISO 29119',
+          en: 'Generated from IEEE 829 / ISO 29119 template',
+        },
         icon: ClipboardList,
         available: false,
       },
       {
         id: 'coverage-matrix',
-        label: 'Матрица покрытия требований',
-        description: 'Трассируемость требований и тестов',
+        label: { ru: 'Матрица покрытия требований', en: 'Requirements coverage matrix' },
+        description: { ru: 'Трассируемость требований и тестов', en: 'Requirements-to-tests traceability' },
         icon: LayoutGrid,
         available: false,
       },
       {
         id: 'effort-estimation',
-        label: 'Оценка трудозатрат на тестирование',
-        description: 'Оценка объёма и сроков',
+        label: { ru: 'Оценка трудозатрат на тестирование', en: 'Testing effort estimation' },
+        description: { ru: 'Оценка объёма и сроков', en: 'Estimate scope and timelines' },
         icon: Calculator,
         available: false,
       },
@@ -79,38 +85,47 @@ export const MENU: MenuCategory[] = [
   },
   {
     id: 'documentation',
-    label: 'Написание документации',
-    description: 'Анализ требований и генерация QA-документации',
+    label: { ru: 'Написание документации', en: 'Documentation' },
+    description: {
+      ru: 'Анализ требований и генерация QA-документации',
+      en: 'Requirements analysis and QA documentation',
+    },
     icon: FileText,
     available: true,
     tools: [
       {
         id: 'requirements-analysis',
-        label: 'Анализ требований',
-        description: 'Полнота, противоречия, неоднозначности, риски',
+        label: { ru: 'Анализ требований', en: 'Requirements analysis' },
+        description: {
+          ru: 'Полнота, противоречия, неоднозначности, риски',
+          en: 'Completeness, contradictions, ambiguities, risks',
+        },
         icon: ShieldAlert,
         available: true,
         view: 'requirements-analysis',
       },
       {
         id: 'test-cases',
-        label: 'Генерация тест-кейсов',
-        description: 'Структурированные тест-кейсы по требованиям',
+        label: { ru: 'Генерация тест-кейсов', en: 'Test-case generation' },
+        description: {
+          ru: 'Структурированные тест-кейсы по требованиям',
+          en: 'Structured test cases from requirements',
+        },
         icon: FileCheck2,
         available: true,
         view: 'test-cases',
       },
       {
         id: 'checklists',
-        label: 'Генерация чек-листов',
-        description: 'Краткие проверочные списки',
+        label: { ru: 'Генерация чек-листов', en: 'Checklist generation' },
+        description: { ru: 'Краткие проверочные списки', en: 'Concise verification checklists' },
         icon: ListChecks,
         available: false,
       },
       {
         id: 'bug-reports',
-        label: 'Генерация баг-репортов',
-        description: 'Оформление дефектов по шаблону',
+        label: { ru: 'Генерация баг-репортов', en: 'Bug-report generation' },
+        description: { ru: 'Оформление дефектов по шаблону', en: 'Defect write-ups from a template' },
         icon: Bug,
         available: false,
       },
@@ -118,15 +133,15 @@ export const MENU: MenuCategory[] = [
   },
   {
     id: 'engineering',
-    label: 'Инжиниринг',
-    description: 'Чат-ассистент общего назначения',
+    label: { ru: 'Инжиниринг', en: 'Engineering' },
+    description: { ru: 'Чат-ассистент общего назначения', en: 'General-purpose chat assistant' },
     icon: MessageSquareCode,
     available: false,
   },
   {
     id: 'coding',
-    label: 'Коддинг',
-    description: 'Работа с кодом',
+    label: { ru: 'Коддинг', en: 'Coding' },
+    description: { ru: 'Работа с кодом', en: 'Working with code' },
     icon: Code2,
     available: false,
   },

@@ -57,8 +57,9 @@ public class OrchestrationService {
         String analystUrl = agentProperties.analyst().url();
 
         CompletableFuture<String> testerFuture = agentClient.sendTask(testerUrl, documentText, qaMetadata);
+        // Forward metadata to the analyst too so it picks up `lang` (it ignores qa/riskAnalysis).
         CompletableFuture<String> analystFuture = includeRiskAnalysis
-                ? agentClient.sendTask(analystUrl, documentText, null)
+                ? agentClient.sendTask(analystUrl, documentText, qaMetadata)
                 : CompletableFuture.completedFuture(null);
 
         try {

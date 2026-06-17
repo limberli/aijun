@@ -3,12 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ChevronDown, Copy } from 'lucide-react'
 import type { TestCase } from '@/types/result'
 import { Badge } from '@/components/ui/Badge'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/cn'
 
 const EDGE_RE = /(гранич|boundary)/i
 
 /** Collapsed row "| TC-01 | Название |"; expands into a step table with a copy button. */
 export function TestCaseAccordion({ testCase, index }: { testCase: TestCase; index: number }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const isEdge = EDGE_RE.test(testCase.technique)
@@ -34,8 +36,8 @@ export function TestCaseAccordion({ testCase, index }: { testCase: TestCase; ind
         <span className="font-mono text-[0.65rem] text-slate-500">
           {testCase.id || `TC-${String(index + 1).padStart(2, '0')}`}
         </span>
-        <span className="flex-1 text-xs text-slate-200">{testCase.title || 'Без названия'}</span>
-        {isEdge && <Badge tone="amber">граничный</Badge>}
+        <span className="flex-1 text-xs text-slate-200">{testCase.title || t('tc.untitled')}</span>
+        {isEdge && <Badge tone="amber">{t('tc.edge')}</Badge>}
         <ChevronDown
           className={cn('h-4 w-4 shrink-0 text-slate-500 transition', open && 'rotate-180')}
         />
@@ -59,7 +61,7 @@ export function TestCaseAccordion({ testCase, index }: { testCase: TestCase; ind
                   className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[0.7rem] text-slate-300 transition hover:border-brand-cyan/30 hover:text-brand-cyan"
                 >
                   {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copied ? 'Скопировано' : 'Копировать'}
+                  {copied ? t('tc.copied') : t('tc.copy')}
                 </button>
               </div>
 
@@ -68,8 +70,8 @@ export function TestCaseAccordion({ testCase, index }: { testCase: TestCase; ind
                   <thead>
                     <tr className="bg-white/[0.04] text-slate-400">
                       <th className="w-10 px-2.5 py-1.5 font-medium">#</th>
-                      <th className="px-2.5 py-1.5 font-medium">Шаг</th>
-                      <th className="px-2.5 py-1.5 font-medium">Ожидаемый результат</th>
+                      <th className="px-2.5 py-1.5 font-medium">{t('tc.colStep')}</th>
+                      <th className="px-2.5 py-1.5 font-medium">{t('tc.colExpected')}</th>
                     </tr>
                   </thead>
                   <tbody>

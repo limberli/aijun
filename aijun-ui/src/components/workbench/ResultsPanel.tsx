@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { TestCaseAccordion } from '@/components/workbench/TestCaseAccordion'
 import { StatsBar } from '@/components/workbench/StatsBar'
 import { staggerContainer } from '@/lib/motion'
+import { useI18n } from '@/lib/i18n'
 
 interface ResultsPanelProps {
   result: AnalysisResult | null
@@ -13,6 +14,7 @@ interface ResultsPanelProps {
 }
 
 export function ResultsPanel({ result, loading, error }: ResultsPanelProps) {
+  const { t } = useI18n()
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-surface/60 backdrop-blur-xl">
       <div className="border-b border-white/10 p-3.5 sm:p-4">
@@ -20,7 +22,7 @@ export function ResultsPanel({ result, loading, error }: ResultsPanelProps) {
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-cyan/10 text-brand-cyan">
             <CheckCircle2 className="h-4 w-4" />
           </span>
-          <h3 className="text-sm font-semibold text-white">Сгенерированные тест-кейсы</h3>
+          <h3 className="text-sm font-semibold text-white">{t('results.title')}</h3>
         </div>
       </div>
 
@@ -37,11 +39,12 @@ export function ResultsPanel({ result, loading, error }: ResultsPanelProps) {
 }
 
 function Results({ result }: { result: AnalysisResult }) {
+  const { t } = useI18n()
   if (result.cases.length === 0) {
     return (
       <div>
         <Badge tone="amber">
-          <AlertTriangle className="h-3 w-3" /> Не удалось разобрать таблицу — показан исходный ответ
+          <AlertTriangle className="h-3 w-3" /> {t('results.parseFail')}
         </Badge>
         <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-ink/60 p-3 font-mono text-[0.7rem] text-slate-300">
           {result.rawFallback}
@@ -65,20 +68,22 @@ function Results({ result }: { result: AnalysisResult }) {
 }
 
 function LoadingState() {
+  const { t } = useI18n()
   return (
     <div className="flex h-72 flex-col items-center justify-center gap-3 text-slate-400">
       <Loader2 className="h-7 w-7 animate-spin text-brand-cyan" />
-      <p className="text-sm">Генерация тест-кейсов…</p>
-      <p className="text-xs text-slate-600">Локальная модель может думать несколько минут</p>
+      <p className="text-sm">{t('results.loading')}</p>
+      <p className="text-xs text-slate-600">{t('results.loadingHint')}</p>
     </div>
   )
 }
 
 function EmptyState() {
+  const { t } = useI18n()
   return (
     <div className="flex h-72 flex-col items-center justify-center gap-3 text-center text-slate-500">
       <FileSearch className="h-8 w-8 text-slate-600" />
-      <p className="text-sm">Введите требования и нажмите «Сгенерировать»</p>
+      <p className="text-sm">{t('results.empty')}</p>
     </div>
   )
 }
