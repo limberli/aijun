@@ -1,6 +1,7 @@
 import type { ModeSchema, QaSelections } from '@/types/qa'
 import { Panel } from '@/components/ui/Panel'
 import { toggleSelection } from '@/lib/qaSettings'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/cn'
 
 interface TestCaseSettingsProps {
@@ -11,8 +12,9 @@ interface TestCaseSettingsProps {
 
 /** Generation controls (case types, techniques, step detail) rendered from the mode schema. */
 export function TestCaseSettings({ mode, selections, onSelectionsChange }: TestCaseSettingsProps) {
+  const { t } = useI18n()
   return (
-    <Panel title="Настройки генерации">
+    <Panel title={t('req.settings')}>
       <div className="flex flex-col gap-4">
         {mode.controls.map((control) => (
           <div key={control.id}>

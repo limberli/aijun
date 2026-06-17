@@ -1,5 +1,6 @@
 import type { AnalysisResult } from '@/types/result'
 import { Badge } from '@/components/ui/Badge'
+import { useI18n } from '@/lib/i18n'
 
 /**
  * Footer stats under the test-case list:
@@ -11,7 +12,9 @@ import { Badge } from '@/components/ui/Badge'
  * fabricate it — the meaningful, honest signals are shown instead.
  */
 export function StatsBar({ result }: { result: AnalysisResult }) {
-  const edgeTechniques = result.techniques.filter((t) => /(гранич|boundary)/i.test(t))
+  const { t } = useI18n()
+  const isEdge = (tech: string) => /(гранич|boundary)/i.test(tech)
+  const edgeTechniques = result.techniques.filter(isEdge)
 
   return (
     <div className="flex flex-col gap-3 border-t border-white/10 bg-white/[0.03] px-4 py-3 sm:px-5">
@@ -20,14 +23,14 @@ export function StatsBar({ result }: { result: AnalysisResult }) {
           <span className="font-display text-base font-bold text-brand-cyan">
             {result.cases.length}
           </span>
-          кейсов за прогон
+          {t('stats.casesPerRun')}
         </span>
         {result.riskAnalysisEnabled && (
           <span className="flex items-center gap-2 text-slate-400">
             <span className="font-display text-base font-bold text-white">
               {result.risks.length}
             </span>
-            рисков
+            {t('stats.risks')}
           </span>
         )}
       </div>
@@ -35,11 +38,11 @@ export function StatsBar({ result }: { result: AnalysisResult }) {
       {result.techniques.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[0.7rem] text-slate-500">
-            {edgeTechniques.length > 0 ? 'Граничные случаи и техники:' : 'Применённые техники:'}
+            {edgeTechniques.length > 0 ? t('stats.edgeTechniques') : t('stats.techniques')}
           </span>
-          {result.techniques.map((t) => (
-            <Badge key={t} tone={/(гранич|boundary)/i.test(t) ? 'amber' : 'slate'}>
-              {t}
+          {result.techniques.map((tech) => (
+            <Badge key={tech} tone={isEdge(tech) ? 'amber' : 'slate'}>
+              {tech}
             </Badge>
           ))}
         </div>

@@ -3,6 +3,7 @@ import { ArrowRight, Lock } from 'lucide-react'
 import { MENU, type MenuCategory, type MenuTool } from '@/config/menu'
 import { Badge } from '@/components/ui/Badge'
 import { fadeUp, staggerContainer } from '@/lib/motion'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/cn'
 
 interface MainMenuProps {
@@ -11,15 +12,12 @@ interface MainMenuProps {
 
 /** AI JUN V2 start screen: pick a domain, then a tool. Only built tools are clickable. */
 export function MainMenu({ onOpenTool }: MainMenuProps) {
+  const { t } = useI18n()
   return (
     <div>
       <div className="mb-10 text-center">
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">
-          Выберите, над чем будете работать
-        </h1>
-        <p className="mt-3 text-sm text-slate-400">
-          AI JUN — инструмент QA-инженера. Часть модулей в разработке.
-        </p>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('menu.title')}</h1>
+        <p className="mt-3 text-sm text-slate-400">{t('menu.subtitle')}</p>
       </div>
 
       <motion.div
@@ -43,6 +41,7 @@ function CategoryCard({
   category: MenuCategory
   onOpenTool: MainMenuProps['onOpenTool']
 }) {
+  const { t, loc } = useI18n()
   const Icon = category.icon
   const hasTools = !!category.tools?.length
 
@@ -60,14 +59,14 @@ function CategoryCard({
         </span>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-semibold text-white">{category.label}</h2>
+            <h2 className="font-display text-lg font-semibold text-white">{loc(category.label)}</h2>
             {!category.available && !hasTools && (
               <Badge tone="slate">
-                <Lock className="h-3 w-3" /> в разработке
+                <Lock className="h-3 w-3" /> {t('common.inDev')}
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-400">{category.description}</p>
+          <p className="mt-1 text-xs text-slate-400">{loc(category.description)}</p>
         </div>
       </div>
 
@@ -89,6 +88,7 @@ function ToolRow({
   tool: MenuTool
   onOpenTool: MainMenuProps['onOpenTool']
 }) {
+  const { t, loc } = useI18n()
   const Icon = tool.icon
   const clickable = tool.available && tool.view
 
@@ -107,14 +107,14 @@ function ToolRow({
       >
         <Icon className="h-4 w-4 shrink-0 text-brand-cyan" />
         <span className="flex-1">
-          <span className="block text-sm text-slate-100">{tool.label}</span>
-          <span className="block text-[0.7rem] text-slate-500">{tool.description}</span>
+          <span className="block text-sm text-slate-100">{loc(tool.label)}</span>
+          <span className="block text-[0.7rem] text-slate-500">{loc(tool.description)}</span>
         </span>
         {clickable ? (
           <ArrowRight className="h-4 w-4 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-brand-cyan" />
         ) : (
           <Badge tone="slate">
-            <Lock className="h-3 w-3" /> скоро
+            <Lock className="h-3 w-3" /> {t('common.soon')}
           </Badge>
         )}
       </button>

@@ -3,6 +3,7 @@ import { Check, Clock, Coins, Cpu, Crown, ShieldCheck, Zap } from 'lucide-react'
 import { ACTIVE_PLAN, PLANS, type PlanConfig } from '@/config/plan'
 import { useRateLimit } from '@/lib/rateLimit'
 import { useNavigate } from '@/lib/navigation'
+import { useI18n } from '@/lib/i18n'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { fadeUp, staggerContainer } from '@/lib/motion'
@@ -10,9 +11,10 @@ import { cn } from '@/lib/cn'
 
 const ORDER: PlanConfig[] = [PLANS.free, PLANS.pro]
 
-/** "Тариф / Лимиты" screen: current plan, free↔pro comparison, live limit status, upgrade link.
+/** "Plan / limits" screen: current plan, free↔pro comparison, live limit status, top-up link.
  * For a local model there are no limits or billing — a single reassuring card is shown instead. */
 export function PlanScreen() {
+  const { t } = useI18n()
   const { isLimited, remainingMs, exact, rateLimited } = useRateLimit()
 
   if (ACTIVE_PLAN.id === 'local') {
@@ -22,20 +24,17 @@ export function PlanScreen() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Тариф и лимиты</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Лимиты задаёт LLM-провайдер (Groq) на стороне аккаунта. Текущий тариф приложения —{' '}
-          <span className="text-brand-100">{ACTIVE_PLAN.label}</span>.
-        </p>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('plan.title')}</h1>
+        <p className="mt-2 text-sm text-slate-400">{t('plan.subtitle', { plan: ACTIVE_PLAN.label })}</p>
       </div>
 
       {/* Live limit status */}
       {isLimited && (
         <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
           <Clock className="h-4 w-4" />
-          {rateLimited ? 'Лимит исчерпан.' : 'Сервис временно недоступен.'}{' '}
-          {exact ? 'Доступно через' : 'Повтор через'} {formatDuration(remainingMs)}
-          {rateLimited && !exact && ' (оценка)'}
+          {rateLimited ? t('plan.limitReached') : t('plan.unavailable')}{' '}
+          {exact ? t('plan.availableIn') : t('plan.retryIn')} {formatDuration(remainingMs)}
+          {rateLimited && !exact && t('plan.estimate')}
         </div>
       )}
 
@@ -50,25 +49,19 @@ export function PlanScreen() {
         ))}
       </motion.div>
 
-      <p className="mt-6 text-xs text-slate-500">
-        Остаток токенов и точное время сброса появятся здесь в Phase 2, когда бэкенд начнёт
-        пробрасывать заголовки лимитов провайдера. Сейчас при исчерпании лимита время сброса
-        показывается из ответа об ошибке.
-      </p>
+      <p className="mt-6 text-xs text-slate-500">{t('plan.phase2')}</p>
     </div>
   )
 }
 
 /** Shown when the app runs against a self-hosted model — no limits, no payment. */
 function LocalPlanInfo() {
+  const { t } = useI18n()
   return (
     <div>
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold sm:text-3xl">Локальная модель</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Приложение работает на самостоятельно развёрнутой модели. Оплата и лимиты токенов не
-          применяются.
-        </p>
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">{t('plan.localTitle')}</h1>
+        <p className="mt-2 text-sm text-slate-400">{t('plan.localSubtitle')}</p>
       </div>
 
       <motion.div
@@ -82,15 +75,15 @@ function LocalPlanInfo() {
             <Cpu className="h-4 w-4" />
           </span>
           <h2 className="font-display text-lg font-semibold text-white">Local model</h2>
-          <Badge tone="emerald" className="ml-auto">текущий режим</Badge>
+          <Badge tone="emerald" className="ml-auto">{t('plan.localMode')}</Badge>
         </div>
 
         <ul className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
-          <Feature>Без оплаты и покупки токенов</Feature>
-          <Feature>Без дневных лимитов провайдера</Feature>
+          <Feature>{t('plan.local.f1')}</Feature>
+          <Feature>{t('plan.local.f2')}</Feature>
           <Feature>
             <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-300" /> Данные не уходят во внешний облачный сервис
+              <ShieldCheck className="h-4 w-4 text-emerald-300" /> {t('plan.local.f3')}
             </span>
           </Feature>
         </ul>
@@ -100,6 +93,7 @@ function LocalPlanInfo() {
 }
 
 function PlanCard({ plan, active }: { plan: PlanConfig; active: boolean }) {
+  const { t } = useI18n()
   const isPro = plan.id === 'pro'
   const navigate = useNavigate()
   return (
@@ -122,23 +116,15 @@ function PlanCard({ plan, active }: { plan: PlanConfig; active: boolean }) {
           {isPro ? <Crown className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
         </span>
         <h2 className="font-display text-lg font-semibold text-white">{plan.label}</h2>
-        {active && <Badge tone="cyan" className="ml-auto">текущий</Badge>}
+        {active && <Badge tone="cyan" className="ml-auto">{t('plan.current')}</Badge>}
       </div>
 
       <ul className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+        <Feature>{plan.dailyTokenLimit ? t('plan.card.limited') : t('plan.card.unlimited')}</Feature>
         <Feature>
-          {plan.dailyTokenLimit
-            ? `Дневной лимит токенов: ${plan.dailyTokenLimit.toLocaleString('ru-RU')}`
-            : 'Без жёсткого дневного лимита токенов'}
+          {plan.dailyTokenLimit ? t('plan.card.pauseOnLimit') : t('plan.card.cooldownOnly')}
         </Feature>
-        <Feature>
-          {plan.dailyTokenLimit
-            ? 'При исчерпании — пауза до сброса лимита провайдера'
-            : 'Кулдаун только как защита от частых запросов'}
-        </Feature>
-        <Feature>
-          {isPro ? 'Приоритетная пропускная способность провайдера' : 'Базовая пропускная способность'}
-        </Feature>
+        <Feature>{isPro ? t('plan.card.priority') : t('plan.card.basic')}</Feature>
       </ul>
 
       {isPro && !active && (
@@ -147,7 +133,7 @@ function PlanCard({ plan, active }: { plan: PlanConfig; active: boolean }) {
           icon={<Coins className="h-4 w-4" />}
           className="mt-5 w-full"
         >
-          Купить токены
+          {t('plan.buyCredits')}
         </Button>
       )}
       {!isPro && active && (
@@ -157,7 +143,7 @@ function PlanCard({ plan, active }: { plan: PlanConfig; active: boolean }) {
           icon={<Coins className="h-4 w-4" />}
           className="mt-5 w-full"
         >
-          Пополнить баланс токенов
+          {t('plan.topUp')}
         </Button>
       )}
     </motion.div>

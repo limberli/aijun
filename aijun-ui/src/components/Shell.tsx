@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Cpu } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
+import { LanguageToggle } from '@/components/LanguageToggle'
 
 interface ShellProps {
   /** Optional left slot in the header (e.g. a back button). */
@@ -11,6 +13,7 @@ interface ShellProps {
 
 /** App frame: ambient background + top bar. Shared by the menu and the workbench. */
 export function Shell({ lead, headerActions, children }: ShellProps) {
+  const { t } = useI18n()
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Ambient brand glow */}
@@ -31,9 +34,12 @@ export function Shell({ lead, headerActions, children }: ShellProps) {
             </span>
           </div>
           <span className="ml-2 hidden rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[0.65rem] font-medium text-slate-400 sm:inline">
-            V2 · Workbench
+            {t('header.badge')}
           </span>
-          {headerActions && <div className="ml-auto">{headerActions}</div>}
+          <div className="ml-auto flex items-center gap-2">
+            {headerActions}
+            <LanguageToggle />
+          </div>
         </div>
       </header>
 
