@@ -1,6 +1,7 @@
 package limberli.analyst.controller;
 
 import limberli.common.a2a.*;
+import limberli.common.util.LanguageSupport;
 import limberli.analyst.service.RiskAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +76,11 @@ public class AgentController {
             );
         }
 
-        String analysis = riskAnalysisService.analyzeRisks(documentText);
+        String lang = request.params() != null
+                ? LanguageSupport.normalize(request.params().metadata() != null
+                        ? request.params().metadata().get("lang") : null)
+                : LanguageSupport.DEFAULT;
+        String analysis = riskAnalysisService.analyzeRisks(documentText, lang);
 
         A2ATaskResult result = new A2ATaskResult(
                 request.params().id(),

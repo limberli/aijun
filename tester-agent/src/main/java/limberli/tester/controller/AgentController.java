@@ -2,6 +2,7 @@ package limberli.tester.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import limberli.common.a2a.*;
+import limberli.common.util.LanguageSupport;
 import limberli.tester.service.QaSettings;
 import limberli.tester.service.TestCaseGenerationService;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +83,8 @@ public class AgentController {
         }
 
         QaSettings settings = extractSettings(request.params());
-        String testCases = testCaseGenerationService.generateTestCases(documentText, settings);
+        String lang = extractLang(request.params());
+        String testCases = testCaseGenerationService.generateTestCases(documentText, settings, lang);
 
         A2ATaskResult result = new A2ATaskResult(
                 request.params().id(),
@@ -102,6 +104,14 @@ public class AgentController {
                 .map(A2APart::text)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /** Reads the output language from A2A {@code params.metadata.lang} ("ru" | "en"); default "ru". */
+    private String extractLang(A2ATaskParams params) {
+        if (params == null || params.metadata() == null) {
+            return LanguageSupport.DEFAULT;
+        }
+        return LanguageSupport.normalize(params.metadata().get("lang"));
     }
 
     /** Reads generation settings from A2A {@code params.metadata.qa}; returns null if absent. */

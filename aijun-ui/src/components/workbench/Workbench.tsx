@@ -18,7 +18,7 @@ const MODE_ID = 'test-cases'
 
 /** Test-case generation tool: left = requirements + settings, right = parsed cases + stats. */
 export function Workbench() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [modes, setModes] = useState<ModeSchema[]>(DEFAULT_MODES)
   const mode = useMemo(
     () => modes.find((m) => m.id === MODE_ID) ?? modes[0] ?? DEFAULT_MODES[0],
@@ -74,7 +74,7 @@ export function Workbench() {
     setResult(null)
     try {
       // Risk analysis is a separate tool now → never request it here.
-      const metadata = buildQaMetadata(mode.id, selections, false)
+      const metadata = buildQaMetadata(mode.id, selections, false, lang)
       const { aggregated } = await analyze(documentText, metadata, controller.signal)
       setResult(parseAggregated(aggregated, false))
     } catch (e) {

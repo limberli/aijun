@@ -1,5 +1,6 @@
 package limberli.analyst.service;
 
+import limberli.common.util.LanguageSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -57,11 +58,16 @@ public class RiskAnalysisService {
             """;
 
     public String analyzeRisks(String documentText) {
-        log.info("Starting risk analysis, documentLength={}", documentText.length());
+        return analyzeRisks(documentText, LanguageSupport.DEFAULT);
+    }
+
+    /** @param lang output language ("ru" | "en"); appends a language directive to the system prompt. */
+    public String analyzeRisks(String documentText, String lang) {
+        log.info("Starting risk analysis, documentLength={} lang={}", documentText.length(), lang);
         long start = System.currentTimeMillis();
 
         String result = chatClient.prompt()
-                .system(SYSTEM_PROMPT)
+                .system(SYSTEM_PROMPT + LanguageSupport.outputDirective(lang))
                 .user(documentText)
                 .call()
                 .content();

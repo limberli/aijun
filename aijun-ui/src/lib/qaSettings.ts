@@ -26,11 +26,12 @@ export function toggleSelection(
   return { ...selections, [controlId]: next }
 }
 
-/** Wraps chosen settings into the A2A metadata shape: { qa: { mode, selections }, riskAnalysis }. */
+/** Wraps chosen settings into the A2A metadata shape: { qa, riskAnalysis, lang }. */
 export function buildQaMetadata(
   modeId: string,
   selections: QaSelections,
   riskAnalysis: boolean,
+  lang?: 'ru' | 'en',
 ): QaMetadata {
-  return { qa: { mode: modeId, selections }, riskAnalysis }
+  return { qa: { mode: modeId, selections }, riskAnalysis, ...(lang && { lang }) }
 }

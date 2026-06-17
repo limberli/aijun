@@ -19,7 +19,7 @@ import { AnalysisReportPanel } from '@/components/workbench/AnalysisReportPanel'
  * here. Eliminating that waste needs a backend change (Phase 2) — out of scope for now.
  */
 export function RequirementsAnalysisWorkbench() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [documentText, setDocumentText] = useState('')
   const [filename, setFilename] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -52,7 +52,7 @@ export function RequirementsAnalysisWorkbench() {
     setError(null)
     setReport(null)
     try {
-      const metadata = buildQaMetadata('test-cases', defaultSelections(DEFAULT_MODES[0]), true)
+      const metadata = buildQaMetadata('test-cases', defaultSelections(DEFAULT_MODES[0]), true, lang)
       const { aggregated } = await analyze(documentText, metadata, controller.signal)
       setReport(parseRequirementsAnalysis(aggregated))
     } catch (e) {

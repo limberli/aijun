@@ -1,5 +1,6 @@
 package limberli.tester.service;
 
+import limberli.common.util.LanguageSupport;
 import limberli.tester.config.PlannerProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,24 +32,30 @@ public class TestCaseGenerationService {
     private final PlannerProperties plannerProperties;
 
     public String generateTestCases(String documentText, QaSettings settings) {
+        return generateTestCases(documentText, settings, LanguageSupport.DEFAULT);
+    }
+
+    /** @param lang output language ("ru" | "en"); appends a language directive to the system prompt. */
+    public String generateTestCases(String documentText, QaSettings settings, String lang) {
         String modeId = settings != null && settings.mode() != null
                 ? settings.mode()
                 : QaPromptBuilder.DEFAULT_MODE;
+        String directive = LanguageSupport.outputDirective(lang);
 
         if (plannerProperties.isEnabled()) {
             List<String> features =
                     plannerService.extractFeatures(documentText, modeId, plannerProperties.getMaxFeatures());
             if (features.size() >= plannerProperties.getMinFeatures()) {
-                return generateTwoPass(documentText, settings, features);
+                return generateTwoPass(documentText, settings, features, directive);
             }
             log.info("Planner: {} features (< minFeatures={}), using single pass",
                     features.size(), plannerProperties.getMinFeatures());
         }
-        return generateSinglePass(documentText, settings);
+        return generateSinglePass(documentText, settings, directive);
     }
 
-    private String generateSinglePass(String documentText, QaSettings settings) {
-        String systemPrompt = promptBuilder.build(settings);
+    private String generateSinglePass(String documentText, QaSettings settings, String directive) {
+        String systemPrompt = promptBuilder.build(settings) + directive;
         log.info("Single-pass generation, documentLength={} promptLength={}",
                 documentText.length(), systemPrompt.length());
         long start = System.currentTimeMillis();
@@ -60,7 +67,7 @@ public class TestCaseGenerationService {
         return result;
     }
 
-    private String generateTwoPass(String documentText, QaSettings settings, List<String> features) {
+    private String generateTwoPass(String documentText, QaSettings settings, List<String> features, String directive) {
         String baseSystem = promptBuilder.build(settings);
         List<List<String>> batches = partition(features, plannerProperties.getBatchSize());
         log.info("Two-pass generation: {} features in {} batches (size={})",
@@ -70,7 +77,7 @@ public class TestCaseGenerationService {
         List<String> batchTables = new ArrayList<>();
         for (int i = 0; i < batches.size(); i++) {
             List<String> batch = batches.get(i);
-            String systemPrompt = baseSystem + focusInstruction(batch);
+            String systemPrompt = baseSystem + focusInstruction(batch) + directive;
             String table = chatClient.call(systemPrompt, documentText);
             batchTables.add(table);
             log.debug("Batch {}/{} generated ({} features, responseLength={})",
