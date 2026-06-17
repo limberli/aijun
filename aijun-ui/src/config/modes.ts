@@ -32,6 +32,7 @@ export const DEFAULT_MODES: ModeSchema[] = [
           { id: 'boundary', label: 'Граничные значения' },
           { id: 'decision-table', label: 'Таблица решений' },
           { id: 'pairwise', label: 'Pairwise' },
+          { id: 'state-transition', label: 'Переходы состояний' },
           { id: 'positive-negative', label: 'Позитив/негатив' },
         ],
       },
